@@ -1,0 +1,516 @@
+<title>Europos žemėlapis</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Manrope:wght@400;600;700&display=swap">
+<style>
+/* Layout: control panel on the left, square map on the right; stacked on phones */
+:root{
+  --sea:#dbe6ea; --land:#eef0e4; --coast:#7f8f86; --border:#b3baa8; --grat:#c9d6db;
+  --bg:#f4f6f5; --panel:#ffffff; --fg:#1d2a2e; --muted:#5d6b6f; --line:#d8dfdf;
+  --accent:#1f5f7a; --accent-fg:#ffffff; --accent-soft:#dcebf1;
+  --ok:#2e7d4a; --ok-soft:#dff0e4; --bad:#c2412d; --bad-soft:#f8e1dc;
+  --river:#2f7fb8; --mount:#9a5b2c; --hl:#e0861a;
+  --f-display:"Fraunces", Georgia, serif; --f-body:"Manrope", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --sea:#0f1b21; --land:#25302d; --coast:#6d8079; --border:#47534f; --grat:#1c2a31;
+  --bg:#0c1316; --panel:#141e22; --fg:#e4ecec; --muted:#93a3a6; --line:#2a383d;
+  --accent:#6fb4d3; --accent-fg:#0c1316; --accent-soft:#18323e;
+  --ok:#5cc282; --ok-soft:#173326; --bad:#f07a63; --bad-soft:#3a1d18;
+  --river:#5aa9e0; --mount:#d39a62; --hl:#f2a443; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --sea:#0f1b21; --land:#25302d; --coast:#6d8079; --border:#47534f; --grat:#1c2a31;
+  --bg:#0c1316; --panel:#141e22; --fg:#e4ecec; --muted:#93a3a6; --line:#2a383d;
+  --accent:#6fb4d3; --accent-fg:#0c1316; --accent-soft:#18323e;
+  --ok:#5cc282; --ok-soft:#173326; --bad:#f07a63; --bad-soft:#3a1d18;
+  --river:#5aa9e0; --mount:#d39a62; --hl:#f2a443; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.app{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;max-width:1400px;margin:0 auto;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-height:100%;box-sizing:border-box}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0;align-self:start}
+h1{font-family:var(--f-display);font-weight:600;font-size:26px;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:700}
+.sub{color:var(--muted);margin:0;font-size:14px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;color:var(--fg);font:600 14px var(--f-body);padding:9px 6px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.cats{display:flex;flex-direction:column;gap:2px}
+.cat{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;cursor:pointer}
+.cat:hover{background:var(--accent-soft)}
+.cat input{accent-color:var(--accent);width:17px;height:17px;margin:0}
+.cat span{flex:1}
+.cat small{color:var(--muted);font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--fg);font:600 14px var(--f-body);padding:10px 14px;border-radius:9px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.seg button:focus-visible,.cat:focus-within,.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.linkbtn{background:none;border:0;color:var(--accent);font:600 13px var(--f-body);cursor:pointer;padding:0}
+select{font:600 14px var(--f-body);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.prompt{background:var(--accent-soft);border-radius:10px;padding:14px}
+.prompt .tag{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.prompt .name{font-family:var(--f-display);font-size:26px;line-height:1.15;margin-top:4px;text-wrap:balance}
+.prompt .hint{font-size:13px;color:var(--muted);margin-top:6px}
+.progress{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.fb{border-radius:10px;padding:12px 14px;font-weight:600}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.bad{background:var(--bad-soft);color:var(--bad)}
+.fb small{display:block;font-weight:400;color:var(--fg);margin-top:2px}
+.list{max-height:46vh;overflow:auto;border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:1px}
+.list h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px;font-weight:700}
+.item{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);font:400 14px var(--f-body);padding:5px 8px;border-radius:6px;cursor:pointer}
+.item:hover{background:var(--accent-soft)}
+.item.on{background:var(--hl);color:#1a1205;font-weight:600}
+.score{font-family:var(--f-display);font-size:44px;line-height:1}
+.mist{display:flex;flex-direction:column;gap:4px;max-height:40vh;overflow:auto}
+.mist div{display:flex;justify-content:space-between;gap:8px;font-size:14px;border-bottom:1px solid var(--line);padding:4px 0}
+.mist em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mapwrap{position:relative;min-width:0}
+.map{width:100%;aspect-ratio:1/1;max-width:100%;max-height:calc(100dvh - 32px);display:block;margin:0 auto;background:var(--sea);border-radius:12px;border:1px solid var(--line);touch-action:none;cursor:crosshair}
+.mapwrap.learn .map{cursor:pointer}
+.zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
+.zoom button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:700 18px var(--f-body);cursor:pointer}
+.maphint{position:absolute;left:10px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--panel) 85%,transparent);padding:4px 8px;border-radius:6px}
+svg .land{fill:var(--land);stroke:var(--coast);stroke-width:.6;vector-effect:non-scaling-stroke}
+svg .borders{fill:none;stroke:var(--border);stroke-width:.5;vector-effect:non-scaling-stroke}
+svg .grat{fill:none;stroke:var(--grat);stroke-width:.5;vector-effect:non-scaling-stroke}
+svg .area{fill:var(--accent);fill-opacity:.14;stroke:var(--accent);stroke-width:1.2;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
+svg .ln{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:.85}
+svg .ln.river{stroke:var(--river);stroke-width:2.5}
+svg .ln.mount{stroke:var(--mount);stroke-width:5;opacity:.6}
+svg .dot{fill:var(--accent);stroke:var(--panel);stroke-width:1.5;vector-effect:non-scaling-stroke}
+svg .hl .area{fill:var(--hl);fill-opacity:.3;stroke:var(--hl);stroke-dasharray:none;stroke-width:2}
+svg .hl .ln{stroke:var(--hl);opacity:1;stroke-width:5}
+svg .hl .dot{fill:var(--hl)}
+svg .ans .area{fill:var(--ok);fill-opacity:.22;stroke:var(--ok);stroke-dasharray:none;stroke-width:2}
+svg .ans .ln{stroke:var(--ok);opacity:1;stroke-width:5}
+svg .ans .dot{fill:var(--ok)}
+svg .click{stroke:var(--panel);stroke-width:2;vector-effect:non-scaling-stroke}
+svg .click.ok{fill:var(--ok)} svg .click.bad{fill:var(--bad)}
+svg .lbl{fill:var(--fg);font-family:var(--f-body);font-weight:700;paint-order:stroke;stroke:var(--sea);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="app">
+  <aside class="panel" id="panel"></aside>
+  <div class="mapwrap" id="mapwrap">
+    <svg class="map" id="map" viewBox="0 0 1000 1000" role="img" aria-label="Europos kontūrinis žemėlapis">
+      <g id="vp">
+        <path class="grat" id="grat"></path>
+        <path class="land" id="land"></path>
+        <path class="borders" id="borders"></path>
+        <g id="items"></g>
+        <g id="answer"></g>
+      </g>
+    </svg>
+    <div class="zoom">
+      <button id="zin" aria-label="Priartinti">+</button>
+      <button id="zout" aria-label="Nutolinti">−</button>
+      <button id="zreset" aria-label="Visas žemėlapis">⤢</button>
+    </div>
+    <div class="maphint" id="maphint">Ratuku arba pirštais priartinkite, tempkite – paslinkite</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const MAP = __MAP__;
+
+const CATS = [
+  ["juros","Jūros"],["sasiauriai","Sąsiauriai"],["kanalai","Kanalai"],["ilankos","Įlankos ir marios"],
+  ["pusiasaliai","Pusiasaliai"],["salos","Salos ir salynai"],["kalnai","Kalnai"],
+  ["lygumos","Lygumos, aukštumos, žemumos"],["upes","Upės"],["ezerai","Ežerai"],
+  ["ledynai","Ledynai ir ugnikalniai"],["kiti","Kraštiniai taškai ir kt."]
+];
+// p: [ilguma, platuma] + r (km tolerancija); l: linija + r
+const I = [
+ // Jūros
+ {c:"juros",n:"Barenco jūra",p:[40,72.5],r:450},
+ {c:"juros",n:"Baltoji jūra",p:[38,65.6],r:200},
+ {c:"juros",n:"Norvegų jūra",p:[3,68],r:450},
+ {c:"juros",n:"Šiaurės jūra",p:[3,56],r:320},
+ {c:"juros",n:"Airių jūra",p:[-4.8,53.8],r:110},
+ {c:"juros",n:"Tirėnų jūra",p:[11.8,40],r:220},
+ {c:"juros",n:"Jonijos jūra",p:[18.5,37.5],r:220},
+ {c:"juros",n:"Adrijos jūra",l:[[13,45.2],[15,43.8],[17,42.5],[19,40.8]],r:110},
+ {c:"juros",n:"Egėjo jūra",p:[25,38.5],r:200},
+ {c:"juros",n:"Marmuro jūra",p:[28.2,40.75],r:70},
+ {c:"juros",n:"Juodoji jūra",p:[34,43.3],r:330},
+ {c:"juros",n:"Azovo jūra",p:[36.5,46.1],r:130},
+ // Sąsiauriai
+ {c:"sasiauriai",n:"Skagerakas",p:[9,57.9],r:90},
+ {c:"sasiauriai",n:"Kategatas",p:[11.5,56.8],r:75},
+ {c:"sasiauriai",n:"Eresuno (Zundo) sąsiauris",p:[12.7,55.9],r:45},
+ {c:"sasiauriai",n:"Didysis Beltas",p:[11,55.4],r:35},
+ {c:"sasiauriai",n:"Mažasis Beltas",p:[9.75,55.35],r:35},
+ {c:"sasiauriai",n:"Kalės (Doverio) sąsiauris",p:[1.5,51],r:50},
+ {c:"sasiauriai",n:"La Manšas",l:[[-5,49.3],[-2.5,49.9],[0.5,50.2]],r:85},
+ {c:"sasiauriai",n:"Gibraltaro sąsiauris",p:[-5.6,35.95],r:50},
+ {c:"sasiauriai",n:"Bosforas",p:[29.05,41.12],r:35},
+ {c:"sasiauriai",n:"Dardanelai",p:[26.4,40.2],r:40},
+ // Kanalai
+ {c:"kanalai",n:"Kylio kanalas",l:[[9.15,53.9],[9.7,54.25],[10.15,54.37]],r:40},
+ {c:"kanalai",n:"Dunojaus–Maino kanalas",l:[[10.9,49.9],[11.05,49.45],[11.6,49.05],[11.9,48.92]],r:45},
+ {c:"kanalai",n:"Volgos–Dono kanalas",l:[[43.5,48.7],[44.5,48.55]],r:55},
+ // Įlankos
+ {c:"ilankos",n:"Botnijos įlanka",l:[[19.5,60.6],[20.5,62.5],[22,64.2],[24,65.4]],r:110},
+ {c:"ilankos",n:"Suomių įlanka",l:[[23,59.6],[26,59.9],[29,60.0]],r:70},
+ {c:"ilankos",n:"Rygos įlanka",p:[23.4,57.6],r:75},
+ {c:"ilankos",n:"Kuršių marios",p:[21.2,55.3],r:30},
+ {c:"ilankos",n:"Aistmarės",p:[19.8,54.5],r:30},
+ {c:"ilankos",n:"Gdansko įlanka",p:[19,54.6],r:45},
+ {c:"ilankos",n:"Biskajos įlanka",p:[-4,45],r:220},
+ // Pusiasaliai
+ {c:"pusiasaliai",n:"Kolos pusiasalis",p:[36,67.8],r:180},
+ {c:"pusiasaliai",n:"Skandinavijos pusiasalis",p:[15,63.5],r:450},
+ {c:"pusiasaliai",n:"Jutlandijos pusiasalis",p:[9.2,56],r:110},
+ {c:"pusiasaliai",n:"Bretanės pusiasalis",p:[-3.3,48.2],r:100},
+ {c:"pusiasaliai",n:"Pirėnų pusiasalis",p:[-4,40],r:420},
+ {c:"pusiasaliai",n:"Apeninų pusiasalis",l:[[10,44.2],[12.5,42.6],[15,40.8],[16.2,38.6]],r:130},
+ {c:"pusiasaliai",n:"Balkanų pusiasalis",p:[22,42.3],r:320},
+ {c:"pusiasaliai",n:"Krymo pusiasalis",p:[34.2,45.2],r:100},
+ {c:"pusiasaliai",n:"Sembos pusiasalis",p:[20.3,54.85],r:30},
+ // Salos
+ {c:"salos",n:"Naujoji Žemė",l:[[52.5,71],[55.5,73.3],[59.5,75.3],[67,76.8]],r:110},
+ {c:"salos",n:"Špicbergenas",p:[16,78.5],r:170},
+ {c:"salos",n:"Islandija",p:[-18.5,65],r:220},
+ {c:"salos",n:"Airija",p:[-8,53.3],r:190},
+ {c:"salos",n:"Didžioji Britanija",l:[[-1,51.6],[-2,54],[-4.5,57.5]],r:170},
+ {c:"salos",n:"Farerų salos",p:[-6.9,62],r:70},
+ {c:"salos",n:"Balearų salos",p:[2.9,39.6],r:110},
+ {c:"salos",n:"Korsika",p:[9.1,42.15],r:70},
+ {c:"salos",n:"Sardinija",p:[9,40],r:100},
+ {c:"salos",n:"Sicilija",p:[14.2,37.5],r:110},
+ {c:"salos",n:"Kreta",p:[24.9,35.25],r:100},
+ {c:"salos",n:"Olandas (Alandų salos)",p:[20,60.2],r:55},
+ {c:"salos",n:"Hyjuma (Hiumos sala)",p:[22.6,58.9],r:30},
+ {c:"salos",n:"Sarema",p:[22.5,58.4],r:40},
+ {c:"salos",n:"Gotlandas",p:[18.5,57.45],r:55},
+ {c:"salos",n:"Elandas",p:[16.6,56.7],r:40},
+ {c:"salos",n:"Bornholmas",p:[14.9,55.12],r:35},
+ {c:"salos",n:"Riugenas",p:[13.4,54.45],r:30},
+ {c:"salos",n:"Zelandija",p:[11.8,55.5],r:50},
+ {c:"salos",n:"Fiunas",p:[10.4,55.3],r:30},
+ {c:"salos",n:"Kanarų salos",p:[-15.5,28.3],r:220},
+ {c:"salos",n:"Hebridai",p:[-6.8,57.5],r:100},
+ {c:"salos",n:"Prano Juozapo Žemė",p:[55,80.7],r:220},
+ // Kalnai
+ {c:"kalnai",n:"Skandinavijos kalnai",l:[[6.5,59],[8,62],[13,64.5],[16,67.5],[20,69.3]],r:130},
+ {c:"kalnai",n:"Škotijos kalnynas (Grampiano kalnai)",l:[[-5.5,56.6],[-4,56.9],[-3,57]],r:70},
+ {c:"kalnai",n:"Peninai",l:[[-2.1,53.2],[-2.2,54.2],[-2.4,55]],r:60},
+ {c:"kalnai",n:"Kambrijos kalnai",l:[[-3.8,51.9],[-3.7,52.5],[-3.9,53.1]],r:60},
+ {c:"kalnai",n:"Kantabrijos kalnai",l:[[-7,42.9],[-5,43],[-3.5,43.1]],r:70},
+ {c:"kalnai",n:"Pirėnai",l:[[-1.5,43],[0.5,42.7],[2.5,42.5]],r:70},
+ {c:"kalnai",n:"Centrinis masyvas",p:[2.9,45.3],r:130},
+ {c:"kalnai",n:"Alpės",l:[[6.6,44.1],[6.9,45.8],[8,46.3],[10,46.5],[12.5,47],[15,47.3]],r:100},
+ {c:"kalnai",n:"Monblanas (4807 m)",p:[6.865,45.833],r:45},
+ {c:"kalnai",n:"Apeninai",l:[[8.5,44.4],[11,44.1],[13.3,42.5],[15.5,40.8],[16,39.5]],r:80},
+ {c:"kalnai",n:"Dinarai (Dinarų kalnai)",l:[[14.5,45.5],[16.5,44],[18.5,43],[19.8,42.4]],r:80},
+ {c:"kalnai",n:"Stara Planina (Balkanų kalnai)",l:[[22.4,43.6],[24.5,42.75],[27,42.7]],r:70},
+ {c:"kalnai",n:"Karpatai",l:[[17.5,48.4],[20,49.3],[23,49],[25,47.8],[25.6,46],[24,45.5],[22.5,45.2]],r:90},
+ {c:"kalnai",n:"Tatrai",p:[20.1,49.2],r:40},
+ {c:"kalnai",n:"Sudetai",l:[[15,50.8],[16.3,50.5],[17.3,50.2]],r:60},
+ {c:"kalnai",n:"Rūdiniai kalnai",l:[[12.3,50.3],[13,50.5],[13.9,50.75]],r:50},
+ {c:"kalnai",n:"Harcas",p:[10.7,51.75],r:50},
+ {c:"kalnai",n:"Vogėzai",l:[[7,48.6],[7,48.05],[6.9,47.8]],r:50},
+ {c:"kalnai",n:"Švarcvaldas",l:[[8.3,48.8],[8.1,48.1],[8.1,47.7]],r:50},
+ {c:"kalnai",n:"Krymo kalnai",l:[[33.6,44.5],[34.4,44.8],[35.1,44.95]],r:50},
+ {c:"kalnai",n:"Kaukazas",l:[[37.5,44.7],[40,43.6],[42.5,43],[45,42.5],[47.5,41.5],[49.3,40.5]],r:100},
+ {c:"kalnai",n:"Elbrusas (5642 m)",p:[42.44,43.35],r:50},
+ {c:"kalnai",n:"Uralas",l:[[59,51],[59,55],[59.5,59],[59,62],[60,65],[64,68]],r:130},
+ // Lygumos
+ {c:"lygumos",n:"Rytų Europos lyguma",p:[38,55],r:750},
+ {c:"lygumos",n:"Valdajaus aukštuma",p:[33,57.4],r:150},
+ {c:"lygumos",n:"Pavolgio aukštuma",l:[[44.5,55.5],[46,52.5],[45.5,49.5]],r:150},
+ {c:"lygumos",n:"Vidurio Rusijos aukštuma",p:[37,52.5],r:260},
+ {c:"lygumos",n:"Podolės aukštuma",p:[27.5,49],r:150},
+ {c:"lygumos",n:"Volynės aukštuma",p:[25.5,50.7],r:120},
+ {c:"lygumos",n:"Pakaspijo žemuma",p:[48,46.5],r:260},
+ {c:"lygumos",n:"Po žemuma",p:[10.5,45.1],r:130},
+ {c:"lygumos",n:"Dunojaus vidurupio žemuma",p:[19.8,46.8],r:190},
+ // Upės
+ {c:"upes",n:"Volga",l:[[32.5,57.25],[35.9,56.86],[38,58],[39.87,57.6],[44,56.3],[49.1,55.8],[48.4,54.3],[50.1,53.2],[46,51.5],[44.5,48.7],[48,46.35],[48.8,45.9]],r:70},
+ {c:"upes",n:"Dnepras",l:[[33,55.8],[32,54.8],[30.4,53.9],[30.2,52],[30.5,50.45],[32.5,49.3],[35,48.4],[35.1,47.8],[33.4,46.75],[32.3,46.55]],r:65},
+ {c:"upes",n:"Vysla",l:[[18.9,49.6],[19.9,50.05],[21.5,50.6],[21,52.25],[20,52.7],[18.6,53],[18.8,53.5],[18.95,54.35]],r:55},
+ {c:"upes",n:"Po",l:[[7.1,44.7],[7.7,45.05],[9.7,45.05],[11.6,44.95],[12.4,44.95]],r:50},
+ {c:"upes",n:"Sena",l:[[4.7,47.5],[4.2,48.3],[3,48.4],[2.35,48.85],[1.1,49.4],[0.2,49.45]],r:50},
+ {c:"upes",n:"Temzė",l:[[-2,51.7],[-1.25,51.75],[-0.9,51.5],[-0.12,51.5],[0.7,51.48]],r:40},
+ {c:"upes",n:"Luara",l:[[4.2,44.85],[4.1,46],[3.1,47],[2,47.9],[1.3,47.4],[-0.55,47.4],[-1.55,47.2],[-2.2,47.27]],r:55},
+ {c:"upes",n:"Ebras",l:[[-4,43],[-2.5,42.5],[-0.9,41.65],[0.5,41.1],[0.9,40.7]],r:55},
+ {c:"upes",n:"Tachas (Težas)",l:[[-1.7,40.5],[-3.6,40],[-4,39.86],[-6.5,39.65],[-8.5,39.3],[-9.2,38.7]],r:55},
+ {c:"upes",n:"Reinas",l:[[8.6,46.6],[9.5,47.2],[8.6,47.65],[7.6,47.6],[7.75,48.6],[8.45,49.5],[8.25,50],[7.6,50.35],[6.95,50.94],[6.6,51.8],[5.9,51.85],[4.1,51.95]],r:50},
+ {c:"upes",n:"Dunojus",l:[[8.2,48],[10,48.4],[12.1,49],[14.3,48.3],[16.37,48.2],[17.1,48.1],[18.9,47.8],[19.05,47.5],[18.9,45.9],[20.45,44.8],[22.5,44.6],[24.5,43.7],[26,43.9],[28,44.1],[28.1,45.3],[29.6,45.3]],r:60},
+ {c:"upes",n:"Elbė",l:[[15.5,50.75],[15.8,50.2],[14.5,50.25],[14.2,50.6],[13.75,51.05],[12.6,51.85],[11.65,52.1],[11.6,53],[10,53.55],[8.7,53.9]],r:50},
+ {c:"upes",n:"Donas",l:[[38,53.9],[38.9,52.4],[39.2,51],[40.5,50],[41,49.4],[43.4,48.7],[42.2,47.6],[40.1,47.4],[39.3,47.1]],r:60},
+ {c:"upes",n:"Odra (Oderis)",l:[[17.6,49.6],[18.2,49.95],[17.9,50.67],[17.03,51.1],[15.5,51.9],[14.6,52.35],[14.3,53.3],[14.6,53.7]],r:50},
+ {c:"upes",n:"Rona",l:[[8.4,46.57],[7.3,46.25],[6.6,46.4],[6.15,46.2],[5.5,45.9],[4.83,45.75],[4.85,44.9],[4.8,43.95],[4.7,43.4]],r:50},
+ {c:"upes",n:"Garona",l:[[0.7,42.8],[1.44,43.6],[0.6,44.2],[-0.57,44.84],[-1,45.3]],r:50},
+ {c:"upes",n:"Tibras",l:[[12,43.8],[12.4,43.1],[12.5,42.4],[12.48,41.9],[12.25,41.74]],r:45},
+ {c:"upes",n:"Uralas (upė)",l:[[59.4,54.5],[59,53.4],[58.6,51.2],[57,51.5],[55.1,51.77],[53,51.5],[51.4,51.2],[51.6,49.5],[51.9,47.1]],r:65},
+ {c:"upes",n:"Dauguva",l:[[32.5,56.5],[30.2,55.2],[28.75,55.5],[27.5,55.85],[26.5,55.88],[25.5,56.4],[24.1,56.95],[24.05,57.05]],r:50},
+ {c:"upes",n:"Pečora",l:[[59,62],[57.3,62.3],[56.5,64],[57.2,65.1],[53,65.3],[52,66],[52.4,67.3],[53.5,67.7],[54.2,68.2]],r:65},
+ // Ežerai
+ {c:"ezerai",n:"Ženevos ežeras",p:[6.55,46.45],r:30},
+ {c:"ezerai",n:"Balatonas",p:[17.75,46.85],r:30},
+ {c:"ezerai",n:"Bodeno ežeras",p:[9.35,47.6],r:30},
+ {c:"ezerai",n:"Gardos ežeras",p:[10.65,45.6],r:28},
+ {c:"ezerai",n:"Ladoga",p:[31.6,60.9],r:85},
+ {c:"ezerai",n:"Onega",p:[35.5,61.7],r:85},
+ {c:"ezerai",n:"Venernas",p:[13.3,58.9],r:55},
+ {c:"ezerai",n:"Veternas",p:[14.55,58.2],r:45},
+ {c:"ezerai",n:"Mjosa",p:[10.75,60.85],r:35},
+ {c:"ezerai",n:"Saimos ežerynas",p:[28.5,61.6],r:75},
+ {c:"ezerai",n:"Peipus",p:[27.5,58.6],r:55},
+ {c:"ezerai",n:"Mozūrų ežerynas",p:[21.7,53.8],r:55},
+ // Ledynai ir ugnikalniai
+ {c:"ledynai",n:"Vatnajokudlis (Vatnos ledynas)",p:[-16.8,64.4],r:70},
+ {c:"ledynai",n:"Alečo ledynas",p:[8.03,46.5],r:40},
+ {c:"ledynai",n:"Jostedalo ledynas",p:[6.9,61.7],r:45},
+ {c:"ledynai",n:"Hekla (ugnikalnis)",p:[-19.67,63.98],r:45},
+ {c:"ledynai",n:"Etna (ugnikalnis)",p:[14.99,37.75],r:40},
+ {c:"ledynai",n:"Vezuvijus (ugnikalnis)",p:[14.43,40.82],r:35},
+ {c:"ledynai",n:"Strombolis (Liparų salos)",p:[15.21,38.79],r:40},
+ // Kiti
+ {c:"kiti",n:"Šiaurės kyšulys",p:[25.78,71.17],r:45},
+ {c:"kiti",n:"Uolos kyšulys",p:[-9.5,38.78],r:45},
+ {c:"kiti",n:"Marokio kyšulys",p:[-5.61,36.0],r:35},
+ {c:"kiti",n:"Landsorto įduba (459 m) – giliausia Baltijos vieta",p:[18.95,58.65],r:55},
+ {c:"kiti",n:"Sognės fiordas – ilgiausias fiordas",l:[[5,61.1],[6.5,61.15],[7.5,61.3]],r:45},
+];
+I.forEach((it,i)=>it.id=i);
+const CATNAME = Object.fromEntries(CATS);
+const R = 6371;
+
+// ---------- Map ----------
+const svg = d3.select("#map"), vp = d3.select("#vp");
+const proj = d3.geoAzimuthalEqualArea().rotate([-15,-54]).scale(MAP.scale).translate(MAP.translate).clipExtent([[0,0],[1000,1000]]);
+const gpath = d3.geoPath(proj);
+d3.select("#land").attr("d", MAP.land);
+d3.select("#borders").attr("d", MAP.borders);
+d3.select("#grat").attr("d", gpath(d3.geoGraticule().step([10,10])()));
+let K = 1;
+const zoom = d3.zoom().scaleExtent([1,14]).translateExtent([[0,0],[1000,1000]])
+  .on("zoom", e => { vp.attr("transform", e.transform); K = e.transform.k; rescale(); });
+svg.call(zoom).on("dblclick.zoom", null);
+function rescale(){
+  vp.selectAll(".dot").attr("r", 4.5/K);
+  vp.selectAll(".click").attr("r", 6/K);
+  vp.selectAll(".lbl").attr("font-size", 13/K).style("stroke-width", 3/K+"px");
+}
+d3.select("#zin").on("click",()=>svg.transition().duration(250).call(zoom.scaleBy,1.6));
+d3.select("#zout").on("click",()=>svg.transition().duration(250).call(zoom.scaleBy,1/1.6));
+d3.select("#zreset").on("click",()=>svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity));
+
+function geomOf(it){
+  if(it.p) return d3.geoCircle().center(it.p).radius(it.r/111.19)();
+  return {type:"LineString",coordinates:it.l};
+}
+function lineClass(it){ return it.c==="upes"||it.c==="kanalai" ? "ln river" : it.c==="kalnai"||it.c==="lygumos" ? "ln mount" : "ln"; }
+function labelPos(it){ return it.p ? it.p : it.l[Math.floor(it.l.length/2)]; }
+function drawItem(g, it, withLabel){
+  const s = g.append("g").attr("data-id", it.id);
+  if(it.p){
+    s.append("path").attr("class","area").attr("d", gpath(geomOf(it)));
+    const [x,y] = proj(it.p); s.append("circle").attr("class","dot").attr("cx",x).attr("cy",y);
+  } else {
+    s.append("path").attr("class", lineClass(it)).attr("d", gpath(geomOf(it)));
+  }
+  if(withLabel){
+    const [x,y] = proj(labelPos(it));
+    s.append("text").attr("class","lbl").attr("x",x).attr("y",y).attr("dy","-0.6em").attr("text-anchor","middle").text(it.n);
+  }
+  return s;
+}
+// atstumas km nuo taško iki objekto
+const dense = new Map();
+function densify(it){
+  if(dense.has(it.id)) return dense.get(it.id);
+  const pts=[];
+  for(let i=0;i<it.l.length-1;i++){
+    const a=it.l[i], b=it.l[i+1], d=d3.geoDistance(a,b)*R, n=Math.max(1,Math.ceil(d/5)), f=d3.geoInterpolate(a,b);
+    for(let j=0;j<n;j++) pts.push(f(j/n));
+  }
+  pts.push(it.l[it.l.length-1]); dense.set(it.id,pts); return pts;
+}
+function distTo(ll, it){
+  if(it.p) return d3.geoDistance(ll,it.p)*R;
+  let m=Infinity; for(const q of densify(it)) m=Math.min(m,d3.geoDistance(ll,q)*R); return m;
+}
+function edgeDist(ll,it){ return it.p ? Math.max(0, distTo(ll,it)-it.r) : Math.max(0,distTo(ll,it)-it.r); }
+function eventLonLat(e){
+  const [x,y] = d3.pointer(e, svg.node());
+  const t = d3.zoomTransform(svg.node());
+  return proj.invert(t.invert([x,y]));
+}
+function zoomTo(it){
+  const [[x0,y0],[x1,y1]] = gpath.bounds(geomOf(it));
+  const w=Math.max(x1-x0,40), h=Math.max(y1-y0,40), cx=(x0+x1)/2, cy=(y0+y1)/2;
+  const k=Math.min(8, 0.6*1000/Math.max(w,h)), kk=Math.max(1,k);
+  svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(500-kk*cx,500-kk*cy).scale(kk));
+}
+
+// ---------- State ----------
+const S = { mode:"learn", cats:new Set(CATS.map(c=>c[0])), count:"20", showLabels:true, sel:null,
+  q:[], idx:0, score:0, answered:false, mistakes:[], screen:"setup" };
+try{ const sv=JSON.parse(localStorage.getItem("eu-quiz")||"null"); if(sv){ S.mode=sv.mode||S.mode; S.count=sv.count||S.count; if(Array.isArray(sv.cats)&&sv.cats.length) S.cats=new Set(sv.cats.filter(c=>CATNAME[c])); } }catch(e){}
+function save(){ try{ localStorage.setItem("eu-quiz", JSON.stringify({mode:S.mode,count:S.count,cats:[...S.cats]})); }catch(e){} }
+const panel = document.getElementById("panel");
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pool = () => I.filter(it=>S.cats.has(it.c));
+
+function render(){
+  document.getElementById("mapwrap").classList.toggle("learn", S.screen==="learn");
+  if(S.screen==="setup") renderSetup();
+  else if(S.screen==="learn") renderLearn();
+  else if(S.screen==="test") renderTest();
+  else renderResult();
+}
+
+function renderSetup(){
+  d3.select("#items").selectAll("*").remove(); d3.select("#answer").selectAll("*").remove();
+  const n = pool().length;
+  panel.innerHTML = `
+    <div><h1>Europos žemėlapis</h1><p class="sub">Jūros, sąsiauriai, salos, kalnai, upės ir kiti objektai iš sąrašo.</p></div>
+    <div class="seg" role="group" aria-label="Režimas">
+      <button id="mLearn" aria-pressed="${S.mode==="learn"}">Mokymasis</button>
+      <button id="mTest" aria-pressed="${S.mode==="test"}">Testas</button>
+    </div>
+    <p class="sub">${S.mode==="learn" ? "Žemėlapyje matysi visus pasirinktų kategorijų objektus. Spausk pavadinimą sąraše arba objektą žemėlapyje." : "Bus parodytas objekto pavadinimas – spausk toje žemėlapio vietoje, kur jis yra."}</p>
+    <div class="row" style="justify-content:space-between"><h2>Kategorijos</h2>
+      <span class="row"><button class="linkbtn" id="all">Visos</button><button class="linkbtn" id="none">Nė vienos</button></span></div>
+    <div class="cats">${CATS.map(([k,l])=>`<label class="cat"><input type="checkbox" id="c-${k}" value="${k}" ${S.cats.has(k)?"checked":""}><span>${l}</span><small>${I.filter(i=>i.c===k).length}</small></label>`).join("")}</div>
+    ${S.mode==="test" ? `<div class="row"><label for="cnt">Klausimų:</label><select id="cnt">${["10","20","30","all"].map(v=>`<option value="${v}" ${S.count===v?"selected":""}>${v==="all"?"Visi ("+n+")":v}</option>`).join("")}</select></div>`:""}
+    <button class="btn primary" id="go" ${n?"":"disabled"}>${S.mode==="learn"?"Pradėti mokytis":"Pradėti testą"} · ${n} obj.</button>`;
+  panel.querySelector("#mLearn").onclick=()=>{S.mode="learn";save();render();};
+  panel.querySelector("#mTest").onclick=()=>{S.mode="test";save();render();};
+  panel.querySelector("#all").onclick=()=>{S.cats=new Set(CATS.map(c=>c[0]));save();render();};
+  panel.querySelector("#none").onclick=()=>{S.cats.clear();save();render();};
+  panel.querySelectorAll(".cat input").forEach(cb=>cb.onchange=()=>{cb.checked?S.cats.add(cb.value):S.cats.delete(cb.value);save();render();});
+  const cnt=panel.querySelector("#cnt"); if(cnt) cnt.onchange=()=>{S.count=cnt.value;save();render();};
+  panel.querySelector("#go").onclick=()=> S.mode==="learn" ? startLearn() : startTest(pool());
+  drawPreview();
+}
+function drawPreview(){
+  const g=d3.select("#items"); g.selectAll("*").remove();
+  if(S.mode==="learn") pool().forEach(it=>drawItem(g,it,false));
+  rescale();
+}
+
+// ---------- Learn ----------
+function startLearn(){ S.screen="learn"; S.sel=null; render(); }
+function renderLearn(){
+  const items=pool();
+  panel.innerHTML = `
+    <div class="row" style="justify-content:space-between"><h2>Mokymasis</h2><button class="linkbtn" id="back">← Nustatymai</button></div>
+    <div class="prompt" id="selbox">${S.sel!=null?`<div class="tag">${esc(CATNAME[I[S.sel].c])}</div><div class="name">${esc(I[S.sel].n)}</div>`:`<div class="tag">Pasirink objektą</div><div class="hint">Spausk pavadinimą sąraše arba objektą žemėlapyje.</div>`}</div>
+    <label class="cat"><input type="checkbox" id="lbls" ${S.showLabels?"checked":""}><span>Rodyti pavadinimus žemėlapyje</span></label>
+    <button class="btn" id="totest">Pasitikrinti šias kategorijas testu</button>
+    <div class="list">${CATS.filter(([k])=>S.cats.has(k)).map(([k,l])=>`<h3>${l}</h3>`+items.filter(i=>i.c===k).map(i=>`<button class="item ${S.sel===i.id?"on":""}" data-id="${i.id}">${esc(i.n)}</button>`).join("")).join("")}</div>`;
+  panel.querySelector("#back").onclick=()=>{S.screen="setup";render();};
+  panel.querySelector("#lbls").onchange=e=>{S.showLabels=e.target.checked;drawLearn();};
+  panel.querySelector("#totest").onclick=()=>{S.mode="test";save();startTest(pool());};
+  panel.querySelectorAll(".item").forEach(b=>b.onclick=()=>select(+b.dataset.id,true));
+  drawLearn();
+}
+function drawLearn(){
+  const g=d3.select("#items"); g.selectAll("*").remove(); d3.select("#answer").selectAll("*").remove();
+  pool().forEach(it=>{ if(it.id!==S.sel) drawItem(g,it,S.showLabels); });
+  if(S.sel!=null) drawItem(g,I[S.sel],true).classed("hl",true);
+  rescale();
+}
+function select(id,zoomIt){
+  S.sel=id;
+  const box=panel.querySelector("#selbox");
+  box.innerHTML=`<div class="tag">${esc(CATNAME[I[id].c])}</div><div class="name">${esc(I[id].n)}</div>`;
+  panel.querySelectorAll(".item").forEach(b=>b.classList.toggle("on",+b.dataset.id===id));
+  const on=panel.querySelector(".item.on"); if(on && !zoomIt) on.scrollIntoView({block:"nearest"});
+  drawLearn(); if(zoomIt) zoomTo(I[id]);
+}
+
+// ---------- Test ----------
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function startTest(items, keepAll){
+  let q=shuffle(items);
+  if(!keepAll && S.count!=="all") q=q.slice(0,+S.count);
+  Object.assign(S,{screen:"test",q,idx:0,score:0,answered:false,mistakes:[],last:null});
+  d3.select("#items").selectAll("*").remove();
+  svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity);
+  render();
+}
+function renderTest(){
+  const it=S.q[S.idx], tot=S.q.length;
+  d3.select("#answer").selectAll("*").remove();
+  panel.innerHTML = `
+    <div class="row" style="justify-content:space-between"><h2>Testas</h2><button class="linkbtn" id="back">← Baigti</button></div>
+    <div><div class="progress"><span>Klausimas ${S.idx+1} iš ${tot}</span><span>Teisingai: ${S.score}</span></div>
+      <div class="bar"><i style="width:${S.idx/tot*100}%"></i></div></div>
+    <div class="prompt"><div class="tag">${esc(CATNAME[it.c])}</div><div class="name">${esc(it.n)}</div>
+      <div class="hint">Spausk žemėlapyje, kur yra šis objektas.</div></div>
+    <div id="fb"></div>
+    <div class="row"><button class="btn primary" id="next" disabled>${S.idx+1<tot?"Toliau":"Rezultatai"}</button>
+      <button class="btn" id="skip">Nežinau</button></div>`;
+  panel.querySelector("#back").onclick=()=>{S.screen="result";render();};
+  panel.querySelector("#next").onclick=next;
+  panel.querySelector("#skip").onclick=()=>answer(null);
+}
+function answer(ll){
+  if(S.answered) return; S.answered=true;
+  const it=S.q[S.idx], a=d3.select("#answer");
+  const d = ll ? distTo(ll,it) : null, ok = ll!=null && d<=it.r;
+  drawItem(a,it,true).classed("ans",true);
+  if(ll){ const [x,y]=proj(ll); a.append("circle").attr("class","click "+(ok?"ok":"bad")).attr("cx",x).attr("cy",y); }
+  rescale();
+  if(ok) S.score++; else S.mistakes.push({it, km: ll? Math.round(edgeDist(ll,it)) : null});
+  const fb=panel.querySelector("#fb");
+  fb.innerHTML = ok ? `<div class="fb ok">Teisingai!</div>`
+    : `<div class="fb bad">${ll?"Neteisingai":"Praleista"}<small>${ll?`Tavo spustelėjimas nutolęs ~${Math.round(edgeDist(ll,it))} km nuo objekto. `:""}Teisinga vieta pažymėta žaliai.</small></div>`;
+  panel.querySelector("#skip").disabled=true;
+  const nb=panel.querySelector("#next"); nb.disabled=false; nb.focus({preventScroll:true});
+  const [[x0,y0],[x1,y1]]=gpath.bounds(geomOf(it)), t=d3.zoomTransform(svg.node());
+  const [vx0,vy0]=t.apply([x0,y0]), [vx1,vy1]=t.apply([x1,y1]);
+  if(vx1<0||vy1<0||vx0>1000||vy0>1000) zoomTo(it);
+}
+function next(){
+  if(!S.answered) return;
+  S.idx++; S.answered=false;
+  if(S.idx>=S.q.length){ S.screen="result"; render(); } else renderTest();
+}
+function renderResult(){
+  d3.select("#answer").selectAll("*").remove();
+  const done=S.idx+(S.answered?1:0), tot=Math.max(1,Math.min(done,S.q.length)), pct=Math.round(S.score/tot*100);
+  panel.innerHTML = `
+    <h2>Rezultatas</h2>
+    <div><div class="score">${S.score} / ${done}</div><p class="sub">${done?pct+" % teisingai":"Neatsakyta nė į vieną klausimą"}</p></div>
+    ${S.mistakes.length?`<div><h2 style="margin-bottom:6px">Klaidos (${S.mistakes.length})</h2><div class="mist">${S.mistakes.map(m=>`<div><span>${esc(m.it.n)}</span><em>${m.km!=null?"~"+m.km+" km":"praleista"}</em></div>`).join("")}</div></div>`:(done?`<div class="fb ok">Be klaidų!</div>`:"")}
+    <div class="row">
+      ${S.mistakes.length?`<button class="btn primary" id="redo">Kartoti klaidas</button>`:""}
+      <button class="btn ${S.mistakes.length?"":"primary"}" id="again">Naujas testas</button>
+      <button class="btn" id="setup">Nustatymai</button>
+    </div>`;
+  const g=d3.select("#items"); g.selectAll("*").remove();
+  S.mistakes.forEach(m=>drawItem(g,m.it,true).classed("hl",true)); rescale();
+  const r=panel.querySelector("#redo"); if(r) r.onclick=()=>startTest(S.mistakes.map(m=>m.it),true);
+  panel.querySelector("#again").onclick=()=>startTest(pool());
+  panel.querySelector("#setup").onclick=()=>{S.screen="setup";render();};
+}
+
+// ---------- Map clicks ----------
+svg.on("click", e=>{
+  const ll=eventLonLat(e); if(!ll) return;
+  if(S.screen==="test"){ answer(ll); }
+  else if(S.screen==="learn"){
+    let best=null,bs=Infinity;
+    for(const it of pool()){ const s=distTo(ll,it)/Math.max(it.r,25); if(s<bs){bs=s;best=it;} }
+    if(best && bs<=1.3) select(best.id,false);
+  }
+});
+document.addEventListener("keydown", e=>{
+  if(S.screen==="test" && S.answered && (e.key==="Enter"||e.key===" ") && document.activeElement?.id!=="next"){ e.preventDefault(); next(); }
+});
+render();
+</script>
